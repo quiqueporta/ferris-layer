@@ -1,0 +1,5 @@
+[layers]
+0 = "Letters"
+1 = "Symbols"
+2 = "Numbers"
+3 = "Functions"

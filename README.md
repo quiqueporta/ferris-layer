@@ -28,15 +28,33 @@ Keyboard layers only exist inside the firmware: the computer just receives the f
 - A Ferris Sweep with QMK. The build script defaults to a Pro Micro RP2040 and supports any QMK converter (`elite_pi`, `kb2040`, `sparkfun_pm2040`…).
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) and Docker (to build the firmware).
 
+## Commands
+
+Everything goes through `make`. Run `make` alone to list the commands:
+
+| Command | What it does |
+| --- | --- |
+| `make install` | Install the top bar app (asks for sudo). |
+| `make backup` | Save the keyboard's VIA keymap and macros. |
+| `make restore` | Write the backup back to the keyboard. |
+| `make keymap` | Generate the QMK `keymap.c` from the backup. |
+| `make images` | Draw every layer of the backup as SVG images. |
+| `make firmware` | Build the firmware with Docker. |
+| `make flash` | Wait for a half in bootloader mode and copy the firmware to it. |
+| `make test` | Run the tests. |
+| `make run` | Run the top bar app from the source tree. |
+
+They work on the author's keymap by default. Pass `KEYMAP=myname` to use `firmware/keymaps/myname/` and its `via-backup.json`, `CONVERTER=elite_pi` for another controller, `BACKUP=path.json` for a backup somewhere else and `IMAGES=folder` to draw the images somewhere else.
+
 ## Install the desktop app
 
 ```sh
 git clone https://github.com/quiqueporta/ferris-layer.git
 cd ferris-layer
-./install.sh
+make install
 ```
 
-`install.sh`:
+`make install` runs `install.sh`, which:
 
 1. Installs the system packages it needs: `python3-gi`, `gir1.2-gtk-3.0`, `gir1.2-ayatanaappindicator3-0.1` and `gnome-shell-extension-appindicator`.
 2. Creates a virtualenv with uv on the system Python with `--system-site-packages`. GTK bindings are much easier to get from apt than to build from PyPI.
@@ -62,12 +80,18 @@ Layers without a name are shown as `Layer N`. Restart the service after editing:
 
 ## Firmware
 
+Every command takes `KEYMAP=myname` to work on your own keymap folder, `firmware/keymaps/myname/`. The backup lives in that folder as `via-backup.json`.
+
+> [!WARNING]
+> **Never plug or unplug the TRRS cable between the halves while the USB cable is connected.** It can short and damage the controller. Always unplug USB first, and plug it back last.
+
 ### 1. Back up your VIA configuration
 
-Flashing a new VIA firmware usually wipes the keymap and macros stored in the keyboard's EEPROM. Save them first:
+Flashing a new VIA firmware usually wipes the keymap and macros stored in the keyboard's EEPROM. With the keyboard plugged in as usual, save them first:
 
 ```sh
-uv run ferris-via-backup save my-backup.json
+mkdir -p firmware/keymaps/myname
+make backup KEYMAP=myname
 ```
 
 ### 2. Create your keymap
@@ -75,9 +99,8 @@ uv run ferris-via-backup save my-backup.json
 Generate a QMK keymap from the backup. It boots with exactly your current layout, and the layer report is already wired in:
 
 ```sh
-mkdir -p firmware/keymaps/myname
-uv run ferris-via-backup keymap my-backup.json > firmware/keymaps/myname/keymap.c
 cp firmware/keymaps/quique/rules.mk firmware/keymaps/myname/
+make keymap KEYMAP=myname
 ```
 
 If you already have your own QMK keymap, add the files from `firmware/layer_report/` to it and add these lines:
@@ -108,25 +131,46 @@ Clone QMK once, then build inside the official QMK Docker image:
 
 ```sh
 git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/qmk/qmk_firmware.git ~/qmk_firmware
-firmware/build.sh myname promicro_rp2040
+make firmware KEYMAP=myname
 ```
 
-The firmware ends up in `firmware/build/`. Set `QMK_HOME` if QMK lives somewhere else.
+The firmware ends up in `firmware/build/`. Add `CONVERTER=elite_pi` (or your controller) if it is not a Pro Micro RP2040, and set `QMK_HOME` if QMK lives somewhere else.
 
 ### 4. Flash both halves
 
-Flash both halves with the same firmware, so they keep understanding each other over the TRRS cable. For each half, on its own:
+Both halves need the same firmware, so they keep understanding each other over the TRRS cable. Flash them one at a time, each with its own USB connection.
 
-1. Unplug the USB and TRRS cables.
-2. Hold the outer top key (`Q` on the left half, `P` on the right half) while plugging the USB cable into that half. This is QMK bootmagic and it puts the board into its bootloader.
-3. A drive called `RPI-RP2` appears. Copy the `.uf2` file to it and the board reboots.
+**Left half**
+
+1. Run `make flash`. It waits up to two minutes for the half to show up.
+2. Unplug the USB cable from the keyboard.
+3. Only then, unplug the TRRS cable between the halves.
+4. Hold `Q` (the outer top key of the left half) and, while holding it, plug the USB cable into the left half. This is QMK bootmagic: instead of starting as a keyboard, the half shows up as a drive called `RPI-RP2`.
+5. `make flash` copies the firmware to it. The half reboots by itself and the drive disappears. Do not unplug anything until `make flash` says it is done.
+6. Unplug the USB cable.
+
+**Right half**
+
+7. Run `make flash` again.
+8. Hold `P` (the outer top key of the right half) and, while holding it, plug the USB cable **directly into the right half**.
+9. Wait until `make flash` says it is done, then unplug the USB cable.
+
+**Put it back together**
+
+10. With USB still unplugged, connect the TRRS cable between the halves.
+11. Plug the USB cable into the left half, without holding any key.
+12. Type on both halves to check that they work.
+
+If the `RPI-RP2` drive does not appear, the firmware you have now may not have bootmagic. Use a `QK_BOOT` key instead: assign it in VIA to a key on some layer, plug in the half as usual and press it. Some boards also have a reset button soldered on the PCB that does the same.
+
+Prefer to copy the file yourself? Copy the `.uf2` from `firmware/build/` to the `RPI-RP2` drive with `cp`. GNOME Files sometimes shows the drive as read-only even though it is not.
 
 ### 5. Restore your macros
 
-The keymap is already in the firmware, but macros only live in the backup:
+The keymap is already in the firmware, but macros only live in the backup. With the keyboard plugged in as usual:
 
 ```sh
-uv run ferris-via-backup restore my-backup.json
+make restore KEYMAP=myname
 ```
 
 ### 6. Keep using VIA
@@ -137,7 +181,7 @@ You only need QMK to build and flash the firmware. Day-to-day changes to keys an
 - After significant changes in VIA, save a fresh backup so nothing is lost the next time you flash:
 
   ```sh
-  uv run ferris-via-backup save my-backup.json
+  make backup KEYMAP=myname
   ```
 
 ## Layer images
@@ -145,12 +189,12 @@ You only need QMK to build and flash the firmware. Day-to-day changes to keys an
 Draw every layer of a VIA backup as an SVG image, with the Sweep's shape:
 
 ```sh
-uv run ferris-via-backup images my-backup.json docs/layers
+make images KEYMAP=myname IMAGES=docs/layers
 ```
 
 Each key shows what it types. Keys that do something else when held show it underneath (`Alt`, `L1`), and macros show what they do (`Win+L`, `Ctrl+Alt+←`) instead of `M0`. Labels assume a US layout, as VIA does.
 
-Save a fresh backup first, so the images match what the keyboard has now.
+Save a fresh backup first with `make backup`, so the images match what the keyboard has now.
 
 ## Example: the author's layout
 
@@ -167,9 +211,8 @@ Save a fresh backup first, so the images match what the keyboard has now.
 
 ```sh
 uv venv --python /usr/bin/python3 --system-site-packages
-uv sync
-uv run pytest
-uv run ferris-layer
+make test
+make run
 ```
 
 | Module | Role |

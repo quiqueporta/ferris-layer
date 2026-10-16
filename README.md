@@ -129,6 +129,17 @@ The keymap is already in the firmware, but macros only live in the backup:
 uv run ferris-via-backup restore my-backup.json
 ```
 
+### 6. Keep using VIA
+
+You only need QMK to build and flash the firmware. Day-to-day changes to keys and macros are still made in [VIA](https://usevia.app), with no rebuild.
+
+- `keymap.c` is only the starting layout: the one the keyboard has right after flashing or after its EEPROM is reset. Whatever you change in VIA is stored in the EEPROM and takes precedence over it.
+- After significant changes in VIA, save a fresh backup so nothing is lost the next time you flash:
+
+  ```sh
+  uv run ferris-via-backup save my-backup.json
+  ```
+
 ## Example: the author's layout
 
 `firmware/keymaps/quique/` holds the author's keymap, generated from `via-backup.json` in the same folder.

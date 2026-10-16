@@ -2,6 +2,7 @@ import json
 import sys
 from pathlib import Path
 
+from ferris_layer.ferris_sweep import MATRIX_COLS, MATRIX_ROWS, PRODUCT_ID, VENDOR_ID
 from ferris_layer.hidraw_device import HidrawDevice
 from ferris_layer.hidraw_finder import HidrawFinder
 from ferris_layer.keymap_source import KeymapSource
@@ -9,10 +10,6 @@ from ferris_layer.layer_images import LayerImages
 from ferris_layer.via_backup import ViaBackup
 
 
-FERRIS_VENDOR_ID = 0xC2AB
-FERRIS_PRODUCT_ID = 0x3939
-FERRIS_MATRIX_ROWS = 8
-FERRIS_MATRIX_COLS = 5
 USAGE = "Usage: ferris-via-backup save|restore|keymap <backup.json> | images <backup.json> <directory>"
 ARGUMENT_COUNTS = {"save": 1, "restore": 1, "keymap": 1, "images": 2}
 
@@ -21,9 +18,9 @@ def main(argv=None):
     action, path, *directory = _arguments(sys.argv[1:] if argv is None else argv)
 
     if action == "images":
-        LayerImages(FERRIS_MATRIX_ROWS, FERRIS_MATRIX_COLS, *directory).write(_read(path))
+        LayerImages(MATRIX_ROWS, MATRIX_COLS, *directory).write(_read(path))
     elif action == "keymap":
-        print(KeymapSource(FERRIS_MATRIX_ROWS, FERRIS_MATRIX_COLS).render(_read(path)), end="")
+        print(KeymapSource(MATRIX_ROWS, MATRIX_COLS).render(_read(path)), end="")
     elif action == "save":
         path.write_text(json.dumps(_with_keyboard(_backup().save), indent=2) + "\n")
         print(f"Backup saved to {path}")
@@ -40,7 +37,7 @@ def _arguments(argv):
 
 
 def _backup():
-    return ViaBackup(matrix_keys=FERRIS_MATRIX_ROWS * FERRIS_MATRIX_COLS)
+    return ViaBackup(matrix_keys=MATRIX_ROWS * MATRIX_COLS)
 
 
 def _read(path):
@@ -56,7 +53,7 @@ def _with_keyboard(action):
 
 
 def _keyboard_path():
-    path = HidrawFinder("/sys/class/hidraw", FERRIS_VENDOR_ID, FERRIS_PRODUCT_ID).find()
+    path = HidrawFinder("/sys/class/hidraw", VENDOR_ID, PRODUCT_ID).find()
     if path is None:
         sys.exit("Ferris Sweep not found. Is it plugged in and is the udev rule installed?")
 

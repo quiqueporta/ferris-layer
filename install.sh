@@ -4,7 +4,7 @@ set -eu
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-SYSTEM_PACKAGES="python3-gi gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1 gnome-shell-extension-appindicator"
+SYSTEM_PACKAGES="python3-gi gir1.2-gtk-3.0 gir1.2-ayatanaappindicator3-0.1 gnome-shell-extension-appindicator librsvg2-common"
 
 step() {
     printf '\n==> %s\n' "$1"

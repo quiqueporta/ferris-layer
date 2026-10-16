@@ -2,11 +2,11 @@
 
 [![Tests](https://github.com/quiqueporta/ferris-layer/actions/workflows/tests.yml/badge.svg)](https://github.com/quiqueporta/ferris-layer/actions/workflows/tests.yml)
 
-Shows the active layer of a [Ferris Sweep](https://github.com/davidphilipbarr/Sweep) running QMK as a coloured icon in the GNOME top bar.
+Shows the active layer of a [Ferris Sweep](https://github.com/davidphilipbarr/Sweep) running QMK as a coloured icon in the GNOME top bar, and can show what every key does on that layer in a small live window.
 
 ![Layer icons](docs/tray-icons.png)
 
-Keyboard layers only exist inside the firmware: the computer just receives the final keys. This project adds a tiny piece of firmware that tells the computer which layer is active, and a small desktop app that turns that into a tray icon.
+Keyboard layers only exist inside the firmware: the computer just receives the final keys. This project adds a tiny piece of firmware that tells the computer which layer is active, and a small desktop app that turns that into a tray icon. No need to open VIA to remember what is on each layer.
 
 ## How it works
 
@@ -58,13 +58,19 @@ make install
 
 `make install` runs `install.sh`, which:
 
-1. Installs the system packages it needs: `python3-gi`, `gir1.2-gtk-3.0`, `gir1.2-ayatanaappindicator3-0.1` and `gnome-shell-extension-appindicator`.
+1. Installs the system packages it needs: `python3-gi`, `gir1.2-gtk-3.0`, `gir1.2-ayatanaappindicator3-0.1`, `gnome-shell-extension-appindicator` and `librsvg2-common` (to draw the layout window).
 2. Creates a virtualenv with uv on the system Python with `--system-site-packages`. GTK bindings are much easier to get from apt than to build from PyPI.
 3. Installs a udev rule so your user can read the keyboard's `/dev/hidraw` device without root.
 4. Copies `config.example.toml` to `~/.config/ferris-layer/config.toml`.
 5. Installs and starts the `ferris-layer` systemd user service.
 
 On Ubuntu the AppIndicator extension is enabled by default. On other GNOME distros enable it with `gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com`.
+
+### Layout window
+
+Choose **Show layout** in the icon's menu to open a small window that stays on top and draws the active layer, with the same labels as the [layer images](#layer-images). It follows every layer change while it is open.
+
+Each time it opens it reads the keymap and macros straight from the keyboard, so it always shows what you have set in VIA. Closing it just hides it.
 
 ### Layer names
 
@@ -226,10 +232,14 @@ The tests also run on GitHub Actions on every push and pull request.
 | `keyboard_connection` | Finds the keyboard, asks for its layer, reconnects when unplugged. |
 | `hidraw_finder`, `hidraw_keyboard` | Talk to `/dev/hidraw`. |
 | `tray_indicator_display`, `layer_icons` | Draw the top bar icon. |
+| `displays` | Shows each layer change on the icon and on the layout window. |
+| `live_layout`, `keyboard_keymap` | Decide what the layout window shows, reading the keymap from the keyboard. |
+| `layout_window` | The GTK layout window. |
 | `via_protocol`, `via_backup`, `keymap_source` | VIA backup, restore and keymap generation. |
 | `via_keymap`, `via_macros` | Read the keymap and macros stored in a VIA backup. |
 | `keycode_labels` | Turns QMK keycodes into keycap labels. |
-| `layer_images`, `layer_drawing`, `sweep_layout` | Draw each layer as an SVG image. |
+| `backup_drawings`, `layer_images`, `layer_drawing`, `sweep_layout` | Draw each layer as an SVG image. |
+| `ferris_sweep` | USB ids and matrix size of the Ferris Sweep. |
 
 ## License
 

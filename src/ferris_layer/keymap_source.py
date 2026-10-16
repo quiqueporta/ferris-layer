@@ -1,4 +1,4 @@
-BYTES_PER_KEY = 2
+from ferris_layer.via_keymap import ViaKeymap
 
 TEMPLATE = """#include QMK_KEYBOARD_H
 #include "layer_report.h"
@@ -26,18 +26,13 @@ class KeymapSource:
         self._cols = cols
 
     def render(self, backup):
-        codes = self._keycodes(bytes.fromhex(backup["keymap"]))
-        layers = "".join(self._layer(number, codes) for number in range(backup["layers"]))
+        keymap = ViaKeymap(backup, self._rows * self._cols)
+        layers = "".join(self._layer(number, codes) for number, codes in enumerate(keymap.layers()))
 
         return TEMPLATE.format(layers=layers)
 
-    def _keycodes(self, keymap):
-        return [int.from_bytes(keymap[i:i + BYTES_PER_KEY], "big") for i in range(0, len(keymap), BYTES_PER_KEY)]
-
     def _layer(self, number, codes):
-        keys_per_layer = self._rows * self._cols
-        layer_codes = codes[number * keys_per_layer:(number + 1) * keys_per_layer]
-        rows = "".join(self._row(layer_codes[r * self._cols:(r + 1) * self._cols]) for r in range(self._rows))
+        rows = "".join(self._row(codes[r * self._cols:(r + 1) * self._cols]) for r in range(self._rows))
 
         return f"    [{number}] = {{\n{rows}    }},\n"
 

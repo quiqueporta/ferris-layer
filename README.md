@@ -140,16 +140,28 @@ You only need QMK to build and flash the firmware. Day-to-day changes to keys an
   uv run ferris-via-backup save my-backup.json
   ```
 
+## Layer images
+
+Draw every layer of a VIA backup as an SVG image, with the Sweep's shape:
+
+```sh
+uv run ferris-via-backup images my-backup.json docs/layers
+```
+
+Each key shows what it types. Keys that do something else when held show it underneath (`Alt`, `L1`), and macros show what they do (`Win+L`, `Ctrl+Alt+←`) instead of `M0`. Labels assume a US layout, as VIA does.
+
+Save a fresh backup first, so the images match what the keyboard has now.
+
 ## Example: the author's layout
 
-`firmware/keymaps/quique/` holds the author's keymap, generated from `via-backup.json` in the same folder.
+`firmware/keymaps/quique/` holds the author's keymap, and `docs/layers/` its images, both generated from `via-backup.json` in the same folder.
 
 | Layer | Name | |
 | --- | --- | --- |
-| 0 | Letters | ![Layer 0](docs/layers/layer-0.png) |
-| 1 | Symbols (hold `Spc Fn`) | ![Layer 1](docs/layers/layer-1.png) |
-| 2 | Numbers (`TO(2)`) | ![Layer 2](docs/layers/layer-2.png) |
-| 3 | Functions (`TO(3)`) | ![Layer 3](docs/layers/layer-3.png) |
+| 0 | Letters | ![Layer 0](docs/layers/layer-0.svg) |
+| 1 | Symbols (hold `Space`) | ![Layer 1](docs/layers/layer-1.svg) |
+| 2 | Numbers (`TO(2)`) | ![Layer 2](docs/layers/layer-2.svg) |
+| 3 | Functions (`TO(3)`) | ![Layer 3](docs/layers/layer-3.svg) |
 
 ## Development
 
@@ -168,6 +180,9 @@ uv run ferris-layer
 | `hidraw_finder`, `hidraw_keyboard` | Talk to `/dev/hidraw`. |
 | `tray_indicator_display`, `layer_icons` | Draw the top bar icon. |
 | `via_protocol`, `via_backup`, `keymap_source` | VIA backup, restore and keymap generation. |
+| `via_keymap`, `via_macros` | Read the keymap and macros stored in a VIA backup. |
+| `keycode_labels` | Turns QMK keycodes into keycap labels. |
+| `layer_images`, `layer_drawing`, `sweep_layout` | Draw each layer as an SVG image. |
 
 ## License
 

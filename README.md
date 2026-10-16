@@ -4,6 +4,8 @@
 
 Shows the active layer of a [Ferris Sweep](https://github.com/davidphilipbarr/Sweep) running QMK as a coloured icon in the GNOME top bar, and can show what every key does on that layer in a small live window.
 
+![The top bar icon and the layout window following each layer change](docs/demo.gif)
+
 ![Layer icons](docs/tray-icons.png)
 
 Keyboard layers only exist inside the firmware: the computer just receives the final keys. This project adds a tiny piece of firmware that tells the computer which layer is active, and a small desktop app that turns that into a tray icon. No need to open VIA to remember what is on each layer.

@@ -1,5 +1,7 @@
 # ferris-layer
 
+[![Tests](https://github.com/quiqueporta/ferris-layer/actions/workflows/tests.yml/badge.svg)](https://github.com/quiqueporta/ferris-layer/actions/workflows/tests.yml)
+
 Shows the active layer of a [Ferris Sweep](https://github.com/davidphilipbarr/Sweep) running QMK as a coloured icon in the GNOME top bar.
 
 ![Layer icons](docs/tray-icons.png)
@@ -214,6 +216,8 @@ uv venv --python /usr/bin/python3 --system-site-packages
 make test
 make run
 ```
+
+The tests also run on GitHub Actions on every push and pull request.
 
 | Module | Role |
 | --- | --- |
